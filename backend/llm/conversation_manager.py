@@ -2,17 +2,19 @@ import os
 from openai import OpenAI
 
 class ConversationManager:
-    def __init__(self, model: str = "gpt-3.5-turbo"):
-        self.model = model
-        self.client = OpenAI(api_key=os.environ.get("OPENAI_API_KEY"))
+    def __init__(self):
+        self.user_histories = {}  # user_id -> list of messages
 
-    def send_message(self, messages):
-        """
-        Send a list of messages to the OpenAI chat completion endpoint and return the assistant's reply.
-        messages: List of dicts, e.g. [{"role": "user", "content": "Hello!"}]
-        """
-        response = self.client.chat.completions.create(
-            model=self.model,
-            messages=messages
-        )
-        return response.choices[0].message.content
+    def get_history(self, user_id):
+        return self.user_histories.get(user_id, [])
+
+    def create_history(self, user_id, initial_messages):
+        self.user_histories[user_id] = initial_messages
+
+    def append_message(self, user_id, message):
+        if user_id not in self.user_histories:
+            self.user_histories[user_id] = []
+        self.user_histories[user_id].append(message)
+
+    def set_history(self, user_id, messages):
+        self.user_histories[user_id] = messages
