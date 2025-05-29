@@ -1,5 +1,5 @@
 from pydantic import BaseModel
-from typing import Optional, List
+from typing import Optional, List, Literal
 from .portfolio import Portfolio
 
 class InvestmentHorizon(BaseModel):
@@ -9,7 +9,7 @@ class InvestmentHorizon(BaseModel):
 class RiskProfile(BaseModel):
     risk_score: dict
     answers: Optional[List[int]] = None         # answer index (0, 1, 2, 3 for multiple choice)
-    questions: Optional[List[str]] = None       # question ids
+    questionnaire_id: Literal["6_month", "12_month", "1_3_years", "3_10_years", "10_plus_years"]
 
 class UserProfile(BaseModel):
     username: str

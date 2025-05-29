@@ -1,5 +1,6 @@
 from db.mongo import MongoDB
 from models.user import UserProfile, InvestmentHorizon, RiskProfile
+from .questionnaire_data_store import QuestionnaireDataStore
 
 class UserDataStore:
     def __init__(self):
@@ -30,9 +31,32 @@ class UserDataStore:
             user.portfolio = portfolio
             self.update_user(username, user)
 
+    def get_user_questionnaire_answers(self, username: str) -> list:
+        """
+        Returns a list of dicts: [{"q": question_text, "a": answer_text}, ...]
+        for the given user's questionnaire and their answers.
+        `questionnaire_lookup_func` should accept a questionnaire_id and return a Questionnaire object.
+        """
+        user = self.get_user(username)
+        if not user or not user.risk_profile or not user.risk_profile.answers:
+            return []
+
+        questionnaire_id = user.risk_profile.questionnaire_id
+        answers = user.risk_profile.answers
+        questionnaire = QuestionnaireDataStore().get_questionnaire(questionnaire_id)
+        if not questionnaire:
+            return []
+
+        result = []
+        for idx, question in enumerate(questionnaire.questions):
+            answer_idx = answers[idx] if idx < len(answers) else None
+            answer_text = question.options[answer_idx] if answer_idx is not None and answer_idx < len(question.options) else None
+            result.append({"q": question.text, "a": answer_text})
+        return result
+
 if __name__ == "__main__":
     from db.mongo import MongoDB
-    from models.portfolio import Portfolio, AssetBase, GoldAsset, USDAsset, StockAsset
+    from models.portfolio import Portfolio, GoldAsset, USDAsset, StockAsset
 
     MongoDB('mongodb://localhost:27018/roboadvisor')
     
@@ -42,8 +66,8 @@ if __name__ == "__main__":
     new_user.investment_horizon = InvestmentHorizon(duration=5, unit="years")
     new_user.risk_profile = RiskProfile(
         risk_score={"score": 5, "description": "Moderate"},
-        questions=["Q1", "Q2", "Q3", "Q4"],
-        answers=[0, 2, 1, 1])
+        questionnaire_id="6_month",
+        answers=[0, 2])
     new_user.initial_investment = 10000.0
     user_store.add_user(new_user)
     retrieved_user = user_store.get_user("test_user")
@@ -55,7 +79,8 @@ if __name__ == "__main__":
         StockAsset(asset_class="Stock", allocation=0.3, buying_price=150.0)
     ])
     user_store.add_portfolio("test_user", portfolio)
+
     # Retrieve and print the user
     retrieved_user = user_store.get_user("test_user")
-
     print(retrieved_user)
+    print(user_store.get_user_questionnaire_answers("test_user"))
