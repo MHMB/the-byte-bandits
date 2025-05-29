@@ -1,0 +1,24 @@
+[tool.poetry]
+name = "the-byte-bandits"
+version = "0.0.1"
+description = ""
+authors = ["mhmb"]
+license = "MIT"
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.12"
+fastapi = "^0.115.12"
+uvicorn = "^0.34.2"
+python-dotenv = "^1.1.0"
+openai = "^1.82.0"
+redis = "^6.2.0"
+fastapi-cache2 = "^0.2.2"
+fastapi-limiter = "^0.1.6"
+requests = "^2.32.3"
+pymongo = "^4.13.0"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
