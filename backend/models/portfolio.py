@@ -1,14 +1,23 @@
 from pydantic import BaseModel
 from typing import List, Optional
 
-class AssetReport(BaseModel):
-    asset_class: str
-    report: str
-
-class PortfolioAsset(BaseModel):
+class AssetBase(BaseModel):
     asset_class: str
     allocation: float
-    report: Optional[AssetReport] = None
+    report: Optional[str] = None
+    place: Optional[str] = None             # Nobitex, etc.
+    symbol: Optional[str] = None            # USDT - Bource Namad
+    buying_price: Optional[float] = None
+    selling_price: Optional[float] = None
+
+class GoldAsset(AssetBase):
+    asset_class: str = "Gold"
+    
+class USDAsset(AssetBase):
+    asset_class: str = "USD"
+
+class StockAsset(AssetBase):
+    asset_class: str = "Stock"
 
 class Portfolio(BaseModel):
-    assets: List[PortfolioAsset] 
+    assets: List[AssetBase] = []
