@@ -2,10 +2,10 @@ from typing import Optional, Tuple
 from .function_interface import Function
 from models.stream_response import StreamResponse
 
+
 class CreateOrderOrder(Function):
     @classmethod
     def run(cls, *args, **kwargs) -> Tuple[Optional[StreamResponse], str]:
-        function_args = kwargs.get('function_call_args')
         return None, "Summarize the order and politely inform that the order has been successfully created."
     
     @classmethod
