@@ -1,19 +1,42 @@
 from typing import Optional, Tuple
 from .function_interface import Function
 from models.stream_response import StreamResponse
+from models.user import UserProfile
+from data_store.user_data_store import UserDataStore
 
-class StoreUserInfo(Function):
+class StoreInvestmentParameters(Function):
     @classmethod
     def run(cls, *args, **kwargs) -> Tuple[Optional[StreamResponse], str]:
-        function_args = kwargs.get('function_call_args')
-        return None, "Summarize the order and politely inform that the order has been successfully created."
+        age = kwargs.get('age', None)
+        investment_amount = kwargs.get('investment_amount', None)
+        increase_rate = kwargs.get('increase_rate', None)
+        investment_horizon_duration = kwargs.get('investment_horizon_duration', None)
+        investment_horizon_unit = kwargs.get('investment_horizon_unit', None)
+        if age is None or investment_amount is None or increase_rate is None or investment_horizon_duration is None or investment_horizon_unit is None:
+            return None, "Please provide all required parameters: age, investment_amount, increase_rate, investment_horizon_duration, and investment_horizon_unit."
+        
+        user_profile = UserProfile(
+            username="1",
+            age=age,
+            initial_investment=investment_amount,
+            investment_increase_rate=increase_rate,
+            investment_horizon={
+                "duration": investment_horizon_duration,
+                "unit": investment_horizon_unit
+            }
+        )
+        # Store the user profile in the data store
+        user_data_store = UserDataStore()
+        user_data_store.create_user(user_profile)
+        # create user and return the username
+        return None, "1"
     
     @classmethod
     def get_name(cls):
-        return ""
+        return "store_investment_parameters"
     
     @classmethod
-    def get_props(cls, store_profile: Optional[dict] = None):
+    def get_props(cls):
         return {
             "type": "function",
             "function": {
