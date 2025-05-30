@@ -1,5 +1,10 @@
 from fastapi import FastAPI
 from backend.api import chat, user, portfolio
+from db.mongo import MongoDB
+import os 
+
+# Initialize MongoDB connection 
+MongoDB(uri=os.getenv('MONGO_URI'))
 
 app = FastAPI()
 
