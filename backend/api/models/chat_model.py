@@ -1,8 +1,8 @@
-from typing import Optional
 from pydantic import BaseModel
+from typing import Optional
 
 class ChatRequest(BaseModel):
-    username: Optional[str] = "1"
+    username: Optional[str]
     message: str
 
 class ChatResponse(BaseModel):
