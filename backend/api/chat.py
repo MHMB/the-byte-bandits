@@ -1,9 +1,11 @@
-from fastapi import APIRouter, Request
+from fastapi import APIRouter
 from fastapi.responses import JSONResponse
 from backend.llm.conversation_manager import ConversationManager
 from backend.llm.assistant import Assistant
 from backend.llm.openai_client import OpenAIClient
 from backend.api.models.chat_model import ChatRequest, ChatResponse
+from backend.llm.functions.function_manager import FunctionFactory
+import json
 
 router = APIRouter()
 
@@ -34,7 +36,43 @@ async def chat_endpoint(request: ChatRequest):
         history = conversation_manager.get_history(user_id)
 
     functions = assistant.get_function_definitions()
-    response = openai_client.chat_completion(messages=history, functions=functions)
-    assistant_reply = response.choices[0].message.content if response.choices else ""
-    conversation_manager.append_message(user_id, {"role": "assistant", "content": assistant_reply})
-    return {"response": assistant_reply} 
+
+    # Function call loop
+    while True:
+        response = openai_client.chat_completion(messages=history, functions=functions)
+        choice = response.choices[0].message if response.choices else None
+        if not choice:
+            assistant_reply = "مشکلی پیش آمده است. لطفاً دوباره تلاش کنید."
+            conversation_manager.append_message(user_id, {"role": "assistant", "content": assistant_reply})
+            return {"response": assistant_reply}
+
+        # Check for function call
+        if hasattr(choice, "function_call") and choice.function_call:
+            function_call = choice.function_call
+            function_name = function_call.name
+            function_args = json.loads(function_call.arguments) if function_call.arguments else {}
+            # Execute the function
+            try:
+                func_cls = FunctionFactory.get_function(function_name)
+                # If the function is async, await it; otherwise, call directly
+                if hasattr(func_cls, "run") and callable(getattr(func_cls, "run")):
+                    result = await func_cls.run(function_call_args=function_args)
+                else:
+                    result = (None, "Function not implemented correctly.")
+                function_response = result[1] if isinstance(result, tuple) else str(result)
+            except Exception as e:
+                function_response = f"Function execution error: {str(e)}"
+            # Append function call and result to history
+            history.append({
+                "role": "function",
+                "name": function_name,
+                "content": function_response
+            })
+            conversation_manager.set_history(user_id, history)
+            # Continue loop: send updated history to OpenAI
+            continue
+        else:
+            # Normal assistant message
+            assistant_reply = choice.content or ""
+            conversation_manager.append_message(user_id, {"role": "assistant", "content": assistant_reply})
+            return {"response": assistant_reply} 
