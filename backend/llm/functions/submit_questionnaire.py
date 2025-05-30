@@ -1,13 +1,26 @@
 from typing import Optional, Tuple
 from .function_interface import Function
 from models.stream_response import StreamResponse
+from data_store.user_data_store import UserDataStore
+import os 
+
+SCRIPT_DIR = os.path.dirname(__file__)
 
 class SubmitQuestionnaire(Function):
     @classmethod
     def run(cls, *args, **kwargs) -> Tuple[Optional[StreamResponse], str]:
-        # TODO: Implement the questionnaire submission logic. This function returns evaluation strategy for the user's responses to the questionnaire. (Tof kon birun kamel)
-        function_args = kwargs.get('function_call_args')
-        return None, "Summarize the questionnaire and politely inform that the questionnaire has been successfully submitted."
+        username = kwargs.get('username', None)
+        user_responses = kwargs.get('user_responses', None)
+        if username is None or user_responses is None:
+            return None, "Please provide both username and user responses."
+        user = UserDataStore().get_user(username)
+        user.risk_profile.answers = user_responses
+        UserDataStore().update_user(user)
+
+        with open(os.path.join(SCRIPT_DIR, '../evaluation_prompts.md'), 'r') as file:
+            eval_prompt = file.read()
+
+        return None, eval_prompt
     
     @classmethod
     def get_name(cls):
@@ -24,9 +37,14 @@ class SubmitQuestionnaire(Function):
                 "parameters": {
                     "type": "object",
                     "required": [
-                    "user_responses"
+                        "username",
+                        "user_responses"
                     ],
                     "properties": {
+                        "username": {
+                            "type": "string",
+                            "description": "Username of the user"
+                        },
                         "user_responses": {
                             "type": "array",
                             "description": "Array of user responses to the questionnaire in the order they were provided",

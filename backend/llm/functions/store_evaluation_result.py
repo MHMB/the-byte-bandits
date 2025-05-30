@@ -1,13 +1,20 @@
 from typing import Optional, Tuple
 from .function_interface import Function
 from models.stream_response import StreamResponse
+from data_store.user_data_store import UserDataStore
 
 class StoreEvaluationResult(Function):
     @classmethod
     def run(cls, *args, **kwargs) -> Tuple[Optional[StreamResponse], str]:
         # TODO: Implement the questionnaire evaluation result storage logic
-        function_args = kwargs.get('function_call_args')
-        return None, "Summarize the evaluation result and politely inform that the evaluation result has been successfully stored."
+        username = kwargs.get('username', None)
+        evaluation_result = kwargs.get('evaluation_result', None)
+        if username is None or evaluation_result is None:   
+            return None, "Please provide both username and evaluation result."
+        user = UserDataStore().get_user(username)
+        user.risk_profile.risk_score = evaluation_result
+        UserDataStore().update_user(user)
+        return None, "success"
     
     @classmethod
     def get_name(cls):

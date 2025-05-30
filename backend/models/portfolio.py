@@ -3,7 +3,7 @@ from typing import List, Optional
 
 class AssetBase(BaseModel):
     asset_class: str
-    allocation: float
+    percentage: float
     report: Optional[str] = None
     place: Optional[str] = None             # Nobitex, etc.
     symbol: Optional[str] = None            # USDT - Bource Namad
