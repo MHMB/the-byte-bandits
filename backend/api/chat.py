@@ -1,16 +1,17 @@
 from fastapi import APIRouter
 from fastapi.responses import JSONResponse
-from backend.llm.conversation_manager import ConversationManager
-from backend.llm.assistant import Assistant
-from backend.llm.openai_client import OpenAIClient
-from backend.api.models.chat_model import ChatRequest, ChatResponse
-from backend.llm.functions.function_manager import FunctionFactory
+from llm.conversation_manager import ConversationManager
+from llm.assistant import Assistant
+from llm.openai_client import OpenAIClient
+from api.models.chat_model import ChatRequest, ChatResponse
+from llm.functions.function_manager import FunctionFactory
 import json
+import logging
 
 router = APIRouter()
 
 conversation_manager = ConversationManager()
-assistant = Assistant(instructions_path="backend/llm/instructions.txt")
+assistant = Assistant(instructions_path="./llm/instructions.txt")
 openai_client = OpenAIClient()
 
 @router.post("/chat")
@@ -21,6 +22,7 @@ async def chat_endpoint(request: ChatRequest):
         return JSONResponse({"error": "No message provided."}, status_code=400)
 
     history = conversation_manager.get_history(user_id)
+    # logging.warning("History: %s", history)
     if not history:
         # First message: inject system prompt
         system_prompt = assistant.get_system_prompt()
@@ -39,6 +41,7 @@ async def chat_endpoint(request: ChatRequest):
 
     # Function call loop
     while True:
+        logging.warn("Sending messages to OpenAI: %s", json.dumps(history, ensure_ascii=False))
         response = openai_client.chat_completion(messages=history, functions=functions)
         choice = response.choices[0].message if response.choices else None
         if not choice:
@@ -54,9 +57,8 @@ async def chat_endpoint(request: ChatRequest):
             # Execute the function
             try:
                 func_cls = FunctionFactory.get_function(function_name)
-                # If the function is async, await it; otherwise, call directly
                 if hasattr(func_cls, "run") and callable(getattr(func_cls, "run")):
-                    result = await func_cls.run(function_call_args=function_args)
+                    result = func_cls.run(function_call_args=function_args)
                 else:
                     result = (None, "Function not implemented correctly.")
                 function_response = result[1] if isinstance(result, tuple) else str(result)

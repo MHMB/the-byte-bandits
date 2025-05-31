@@ -9,7 +9,7 @@ class InvestmentHorizon(BaseModel):
 class RiskProfile(BaseModel):
     risk_score: Optional[dict]
     answers: Optional[List[int]] = None         # answer index (0, 1, 2, 3 for multiple choice)
-    questionnaire_id: Literal["6_month", "12_month", "1_3_years", "3_10_years", "10_plus_years"]
+    questionnaire_id: str # "6_month", "12_month", "1_3_years", "3_10_years", "10_plus_years"
 
 class UserProfile(BaseModel):
     username: str

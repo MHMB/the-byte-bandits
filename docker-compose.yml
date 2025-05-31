@@ -19,6 +19,8 @@ services:
       - "traefik.enable=true"
       - "traefik.http.routers.backend.rule=Host(`localhost`)"
       - "traefik.http.services.backend.loadbalancer.server.port=${BACKEND_PORT}"
+    environment:
+      - PYTHONUNBUFFERED=1
 
   mongodb:
     image: mongo:7
@@ -68,6 +70,24 @@ services:
         condition: service_healthy
     healthcheck:
       test: ["CMD", "wget", "--spider", "-q", "http://localhost:${TRAEFIK_HTTP_PORT}/ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  frontend:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.frontend
+    container_name: frontend
+    env_file:
+      - .env
+    ports:
+      - "8501:8501"  # Map host port 8501 to container port 8501
+    depends_on:
+      backend:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8501/_stcore/health"]
       interval: 10s
       timeout: 5s
       retries: 10

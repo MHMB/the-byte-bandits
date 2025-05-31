@@ -3,33 +3,42 @@ from .function_interface import Function
 from models.stream_response import StreamResponse
 from models.user import UserProfile
 from data_store.user_data_store import UserDataStore
+import logging
+from traceback import format_exc
 
 class StoreInvestmentParameters(Function):
     @classmethod
     def run(cls, *args, **kwargs) -> Tuple[Optional[StreamResponse], str]:
-        age = kwargs.get('age', None)
-        investment_amount = kwargs.get('investment_amount', None)
-        increase_rate = kwargs.get('increase_rate', None)
-        investment_horizon_duration = kwargs.get('investment_horizon_duration', None)
-        investment_horizon_unit = kwargs.get('investment_horizon_unit', None)
-        if age is None or investment_amount is None or increase_rate is None or investment_horizon_duration is None or investment_horizon_unit is None:
-            return None, "Please provide all required parameters: age, investment_amount, increase_rate, investment_horizon_duration, and investment_horizon_unit."
-        
-        user_profile = UserProfile(
-            username="1",
-            age=age,
-            initial_investment=investment_amount,
-            investment_increase_rate=increase_rate,
-            investment_horizon={
-                "duration": investment_horizon_duration,
-                "unit": investment_horizon_unit
-            }
-        )
-        # Store the user profile in the data store
-        user_data_store = UserDataStore()
-        user_data_store.create_user(user_profile)
-        # create user and return the username
-        return None, "1"
+        function_args = kwargs.get('function_call_args', None)
+        logging.warning("StoreInvestmentParameters.run called with args: %s, kwargs: %s", args, kwargs)
+        try:
+            age = function_args.get('age', None)
+            investment_amount = function_args.get('investment_amount', None)
+            increase_rate = function_args.get('increase_rate', None)
+            investment_horizon_duration = function_args.get('investment_horizon_duration', None)
+            investment_horizon_unit = function_args.get('investment_horizon_unit', None)
+            if age is None or investment_amount is None or increase_rate is None or investment_horizon_duration is None or investment_horizon_unit is None:
+                logging.warning("Missing one or more required parameters.")
+                return None, "Please provide all required parameters: age, investment_amount, increase_rate, investment_horizon_duration, and investment_horizon_unit."
+            logging.warn("Creating UserProfile object.")
+            user_profile = UserProfile(
+                username="1",
+                age=age,
+                initial_investment=investment_amount,
+                investment_increase_rate=increase_rate,
+                investment_horizon={
+                    "duration": investment_horizon_duration,
+                    "unit": investment_horizon_unit
+                }
+            )
+            user_data_store = UserDataStore()
+            logging.warn("Storing user profile in data store.")
+            user_data_store.add_user(user_profile)
+            logging.warn("User profile created successfully.")
+            return None, "User profile created and updated successfully. The username of the user is 1"
+        except Exception as e:
+            logging.exception("Error in StoreInvestmentParameters.run: %s", format_exc())
+            return None, f"Error: {e}"
     
     @classmethod
     def get_name(cls):
@@ -41,8 +50,7 @@ class StoreInvestmentParameters(Function):
             "type": "function",
             "function": {
                 "name": "store_investment_parameters",
-                "description": "Stores investment parameters in the database and returns the user ID or -1 if unsuccessful.",
-                "strict": True,
+                "description": "Stores investment parameters in the database and returns the username of the user",
                 "parameters": {
                     "type": "object",
                     "required": [

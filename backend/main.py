@@ -1,5 +1,5 @@
 from fastapi import FastAPI
-from backend.api import chat, user, portfolio
+from api import chat, user, portfolio
 from db.mongo import MongoDB
 import os 
 

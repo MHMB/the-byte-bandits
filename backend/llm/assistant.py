@@ -1,5 +1,5 @@
 import os
-from backend.llm.functions.function_manager import FunctionFactory
+from llm.functions.function_manager import FunctionFactory
 
 class Assistant:
     def __init__(self, instructions_path: str):
@@ -14,4 +14,4 @@ class Assistant:
 
     def get_function_definitions(self):
         # Gather all function definitions from FunctionFactory
-        return [fn.get_props() for fn in FunctionFactory._registry.values()] 
+        return [fn.get_props().get("function") for fn in FunctionFactory._registry.values()] 

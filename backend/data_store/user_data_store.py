@@ -20,7 +20,8 @@ class UserDataStore:
         return None
 
     def update_user(self, username: str, user: UserProfile):
-        self.collection.update_one({"username": username}, {"$set": user.model_dump()})
+        # Use upsert=True to ensure user is created if not present (robust update)
+        self.collection.update_one({"username": username}, {"$set": user.model_dump()}, upsert=True)
 
     def delete_user(self, username: str):
         self.collection.delete_one({"username": username})

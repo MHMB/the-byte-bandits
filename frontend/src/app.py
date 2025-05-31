@@ -44,12 +44,12 @@ def send_message():
         st.session_state.messages.append({"role": "user", "content": user_input})
         try:
             response = requests.post(
-                "http://localhost:8000/chat",
-                json={"message": user_input},
-                timeout=10
+                "http://backend:8000/api/chat",
+                json={"message": user_input, "username": "1"},
+                timeout=600
             )
             if response.ok:
-                bot_reply = response.json().get("reply", "پاسخی دریافت نشد")
+                bot_reply = response.json().get("response", "پاسخی دریافت نشد")
             else:
                 bot_reply = "خطا:‌دسترسی به سرور امکان‌پذیر نیست."
         except Exception as e:
@@ -88,16 +88,9 @@ with st.container():
         key="user_input",
         label_visibility="collapsed",
         placeholder="لطفا پیام خود را وارد کنید...",
-        on_change=send_message,
+        # on_change=send_message,
     )
-    st.markdown(
-        """
-        <form action="#" method="post" style="margin:0;display:inline;">
-            <button type="submit" style="height:2.5rem; padding:0 1.5rem; background:#4F8BF9; color:white; border:none; border-radius:4px; font-size:1rem; cursor:pointer;" onclick="window.dispatchEvent(new Event('send_message'));">ارسال</button>
-        </form>
-        """,
-        unsafe_allow_html=True
-    )
+    send_clicked = st.button("ارسال", on_click=send_message)
     st.markdown('</div>', unsafe_allow_html=True)
 
 # Light theme is default in Streamlit; no extra config needed.

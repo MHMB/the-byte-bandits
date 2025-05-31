@@ -1,7 +1,7 @@
 def send_message_to_chat_api(message):
     import requests
 
-    url = "http://localhost:8000/chat"
+    url = "http://backend:8000/api/chat"
     payload = {"message": message, "username": "1"}
     headers = {"Content-Type": "application/json"}
 

@@ -3,22 +3,32 @@ from .function_interface import Function
 from models.stream_response import StreamResponse
 from data_store.user_data_store import UserDataStore
 from models.portfolio import Portfolio
+import logging
 
 class StoreUserPortfolio(Function):
     @classmethod
     def run(cls, *args, **kwargs) -> Tuple[Optional[StreamResponse], str]:
-        username = kwargs.get('username', None)
-        portfolio_data = kwargs.get('portfolio', None)
-        if username is None or portfolio_data is None:
-            return None, "Please provide both username and portfolio data."
-        
-        portfolio = Portfolio(assets=portfolio_data)
-        user = UserDataStore().get_user(username)
-        if user is None:
-            return None, f"User with username '{username}' does not exist."
-        user.portfolio = portfolio
-        UserDataStore().update_user(user)
-        return None, "success"
+        logging.warn("StoreUserPortfolio.run called with args: %s, kwargs: %s", args, kwargs)
+        function_args = kwargs.get('function_call_args', None)
+        try:
+            username = function_args.get('username', None)
+            portfolio_data = function_args.get('portfolio', None)
+            if username is None or portfolio_data is None:
+                logging.warning("Missing username or portfolio data.")
+                return None, "Please provide both username and portfolio data."
+            logging.warn("Creating Portfolio object for user: %s", username)
+            portfolio = Portfolio(assets=portfolio_data)
+            user = UserDataStore().get_user(username)
+            if user is None:
+                logging.warning("User with username '%s' does not exist.", username)
+                return None, f"User with username '{username}' does not exist."
+            user.portfolio = portfolio
+            logging.warn("Updating user portfolio in data store.")
+            UserDataStore().update_user(user)
+            return None, "success"
+        except Exception as e:
+            logging.exception("Error in StoreUserPortfolio.run: %s", e)
+            return None, f"Error: {e}"
     
     @classmethod
     def get_name(cls):
@@ -31,7 +41,6 @@ class StoreUserPortfolio(Function):
             "function": {
                 "name": "store_user_portfolio",
                 "description": "Store the suggested portfolio to the user profile by giving the username. It must provide each asset (gold, crypto, real-estate, USD, stock) name and percentage of the total portfolio.",
-                "strict": True,
                 "parameters": {
                     "type": "object",
                     "required": [

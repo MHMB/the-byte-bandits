@@ -9,6 +9,7 @@ from .submit_questionnaire import SubmitQuestionnaire
 from .store_evaluation_result import StoreEvaluationResult
 from .store_user_portfolio import StoreUserPortfolio
 from .get_user_questionnaire import GetUserQuestionnaire
+from .store_investment_parameters import StoreInvestmentParameters
 
 class FunctionFactory:
     _registry: Dict[str, Type[Function]] = {}
@@ -31,3 +32,4 @@ FunctionFactory.register_function(SubmitQuestionnaire)
 FunctionFactory.register_function(StoreEvaluationResult)
 FunctionFactory.register_function(StoreUserPortfolio)
 FunctionFactory.register_function(GetUserQuestionnaire)
+FunctionFactory.register_function(StoreInvestmentParameters)
